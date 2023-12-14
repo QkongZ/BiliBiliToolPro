@@ -352,10 +352,20 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
-
 #
 .idea/
 tencentScf/.env
 
-# UnitTest's config file
-test/BiliAgentTest/appsettings.Production.json
+# vs code
+.vscode
+
+# krew
+krew/bilipro
+krew/cmd/kubectl-bilipro
+krew/kustomization.yaml
+bilipro
+krew/pkg/utils/fixtures
+kustomization.yaml
+
+# cookie config
+**/Ray.BiliBiliTool.Console/cookies.json

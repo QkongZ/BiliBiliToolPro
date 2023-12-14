@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Ray.BiliBiliTool.Agent.BiliBiliAgent.Dtos;
+using Ray.BiliBiliTool.Agent.BiliBiliAgent.Dtos.Video;
 using WebApiClientCore.Attributes;
 
 namespace Ray.BiliBiliTool.Agent.BiliBiliAgent.Interfaces
@@ -16,9 +17,8 @@ namespace Ray.BiliBiliTool.Agent.BiliBiliAgent.Interfaces
         /// 分享视频
         /// </summary>
         /// <param name="request"></param>
+        /// <remarks>ck中必须要有buvid3，否则几率性-403</remarks>
         /// <returns></returns>
-        [Header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")]
-        [Header("Referer", "https://www.bilibili.com/")]
         [Header("Origin", "https://www.bilibili.com")]
         [HttpPost("/x/web-interface/share/add")]
         Task<BiliApiResponse> ShareVideo([FormContent] ShareVideoRequest request);
@@ -45,10 +45,10 @@ namespace Ray.BiliBiliTool.Agent.BiliBiliAgent.Interfaces
         /// <param name="csrf"></param>
         /// <returns></returns>
         [Header("Content-Type", "application/x-www-form-urlencoded")]
-        [Header("Referer", "https://www.bilibili.com/")]
+        //[Header("Referer", "https://www.bilibili.com/")]
         [Header("Origin", "https://www.bilibili.com")]
-        [HttpPost("/x/web-interface/coin/add?aid={aid}&multiply={multiply}&select_like={select_like}&cross_domain=true&csrf={csrf}")]
-        Task<BiliApiResponse> AddCoinForVideo([FormContent] AddCoinRequest request);
+        [HttpPost("/x/web-interface/coin/add")]
+        Task<BiliApiResponse> AddCoinForVideo([FormContent] AddCoinRequest request,[Header("referer")]string refer= "https://www.bilibili.com/video/BV123456/?spm_id_from=333.1007.tianma.1-1-1.click&vd_source=80c1601a7003934e7a90709c18dfcffd");
 
         /// <summary>
         /// 获取当前用户对<paramref name="aid"/>视频的投币信息
@@ -59,6 +59,21 @@ namespace Ray.BiliBiliTool.Agent.BiliBiliAgent.Interfaces
         [HttpGet("/x/web-interface/archive/coins")]
         Task<BiliApiResponse<DonatedCoinsForVideo>> GetDonatedCoinsForVideo(GetAlreadyDonatedCoinsRequest request);
         #endregion
+        
+        /// <summary>
+        /// 搜索指定Up的视频列表
+        /// </summary>
+        /// <param name="upId"></param>
+        /// <param name="pageSize">[1,100]验证不通过接口会报异常</param>
+        /// <param name="pageNumber"></param>
+        /// <param name="keyword"></param>
+        /// <returns></returns>
+        [Header("Referer", "https://www.bilibili.com/")]
+        [Header("Origin", "https://space.bilibili.com")]
+        //[HttpGet("/x/space/wbi/arc/search?mid={upId}&ps={pageSize}&tid=0&pn={pageNumber}&keyword={keyword}&order=pubdate&platform=web&web_location=1550101&order_avoided=true&w_rid=5df06b1c48e2be86a96e9d0f99bf06f4&wts=1684854929")]
+        [HttpGet("/x/space/wbi/arc/search")]
+        Task<BiliApiResponse<SearchUpVideosResponse>> SearchVideosByUpId([PathQuery] SearchVideosByUpIdFullDto request);
+        
     }
 
     /// <summary>
@@ -94,19 +109,6 @@ namespace Ray.BiliBiliTool.Agent.BiliBiliAgent.Interfaces
         [Header("Origin", "https://www.bilibili.com")]
         [HttpGet("/x/web-interface/ranking/v2?rid=0&type=all")]
         Task<BiliApiResponse<Ranking>> GetRegionRankingVideosV2();
-
-        /// <summary>
-        /// 搜索指定Up的视频列表
-        /// </summary>
-        /// <param name="upId"></param>
-        /// <param name="pageSize">[1,100]验证不通过接口会报异常</param>
-        /// <param name="pageNumber"></param>
-        /// <param name="keyword"></param>
-        /// <returns></returns>
-        [Header("Referer", "https://space.bilibili.com/")]
-        [Header("Origin", "https://space.bilibili.com")]
-        [HttpGet("/x/space/arc/search?mid={upId}&ps={pageSize}&tid=0&pn={pageNumber}&keyword={keyword}&order=pubdate&jsonp=jsonp")]
-        Task<BiliApiResponse<SearchUpVideosResponse>> SearchVideosByUpId(long upId, int pageSize = 30, int pageNumber = 1, string keyword = "");
 
     }
 }

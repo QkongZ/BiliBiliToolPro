@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+Ôªøusing Microsoft.Extensions.DependencyInjection;
 using Ray.BiliBiliTool.Agent;
 using Ray.BiliBiliTool.Agent.BiliBiliAgent.Dtos;
 using Ray.BiliBiliTool.Agent.BiliBiliAgent.Dtos.Live;
@@ -8,7 +8,9 @@ using Ray.BiliBiliTool.Infrastructure;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Ray.BiliBiliTool.Infrastructure.Cookie;
 using Xunit;
+using Ray.BiliBiliTool.DomainService.Interfaces;
 
 namespace BiliAgentTest
 {
@@ -16,7 +18,7 @@ namespace BiliAgentTest
     {
         public LiveApiTest()
         {
-            Program.CreateHost(new[] { "--ENVIRONMENT=Development" });//ƒ¨»œPrdª∑æ≥£¨’‚¿Ô÷∏∂®Œ™Dev∫Û£¨ø…“‘∂¡»°µΩ”√ªßª˙√‹≈‰÷√
+            Program.CreateHost(new[] { "--ENVIRONMENT=Development" });//√Ñ¬¨√à√èPrd¬ª¬∑¬æ¬≥¬£¬¨√ï√¢√Ä√Ø√ñ¬∏¬∂¬®√é¬™Dev¬∫√≥¬£¬¨¬ø√â√í√î¬∂√Å√à¬°¬µ¬Ω√ì√É¬ª¬ß¬ª√∫√É√ú√Ö√§√ñ√É
         }
 
         [Fact]
@@ -81,6 +83,98 @@ namespace BiliAgentTest
             {
                 Assert.False(re.Code != 0);
             }
+        }
+
+        [Fact]
+        public void GetMedalWall_Normal_Success()
+        {
+            using var scope = Global.ServiceProviderRoot.CreateScope();
+
+            var ck = scope.ServiceProvider.GetRequiredService<CookieStrFactory>();
+            var api = scope.ServiceProvider.GetRequiredService<ILiveApi>();
+
+            BiliApiResponse<MedalWallResponse> re = api.GetMedalWall("919174").Result;
+
+            Assert.NotEmpty(re.Data.List);
+
+            var md = re.Data.List[0];
+            Assert.NotNull(md);
+            Assert.False(String.IsNullOrEmpty(md.Link));
+            Assert.False(String.IsNullOrEmpty(md.Target_name));
+            Assert.NotNull(md.Medal_info);
+            Assert.False(String.IsNullOrEmpty(md.Medal_info.Medal_name));
+            Assert.True(md.Medal_info.Medal_id > 0);
+        }
+
+        [Fact]
+        public void WearMedalWall_Normal_Success()
+        {
+            using var scope = Global.ServiceProviderRoot.CreateScope();
+
+            var ck = scope.ServiceProvider.GetRequiredService<CookieStrFactory>();
+            var api = scope.ServiceProvider.GetRequiredService<ILiveApi>();
+            var biliCookie = scope.ServiceProvider.GetRequiredService<BiliCookie>();
+
+            // Áå´Èõ∑Á≤â‰∏ùÁâå
+            var request = new WearMedalWallRequest(biliCookie.BiliJct, 365421);
+
+            BiliApiResponse re = api.WearMedalWall(request).Result;
+
+            Assert.True(re.Code == 0);
+        }
+
+        [Fact]
+        public async Task GetSpaceInfo_Normal_Success()
+        {
+            using var scope = Global.ServiceProviderRoot.CreateScope();
+
+            var ck = scope.ServiceProvider.GetRequiredService<CookieStrFactory>();
+            var api = scope.ServiceProvider.GetRequiredService<IUserInfoApi>();
+            var biliCookie = scope.ServiceProvider.GetRequiredService<BiliCookie>();
+
+            var domainService = scope.ServiceProvider.GetRequiredService<IWbiDomainService>();
+
+            var req = new GetSpaceInfoDto()
+            {
+                mid = 919174L
+            };
+
+            var w_ridDto = await domainService.GetWridAsync(req);
+
+            var fullDto = new GetSpaceInfoFullDto()
+            {
+                mid = 919174L,
+                w_rid = w_ridDto.w_rid,
+                wts = w_ridDto.wts
+            };
+
+
+
+            BiliApiResponse<GetSpaceInfoResponse> re = api.GetSpaceInfo(fullDto).Result;
+
+            Assert.True(re.Code == 0);
+            Assert.NotNull(re.Data);
+            Assert.Equal(919174, re.Data.Mid);
+            Assert.NotNull(re.Data.Live_room);
+            Assert.Equal(3115258, re.Data.Live_room.Roomid);
+            Assert.False(String.IsNullOrEmpty(re.Data.Name));
+            Assert.False(String.IsNullOrEmpty(re.Data.Live_room.Title));
+        }
+
+        [Fact]
+        public void SendLiveDanmuku_Normal_Success()
+        {
+            using var scope = Global.ServiceProviderRoot.CreateScope();
+
+            var ck = scope.ServiceProvider.GetRequiredService<CookieStrFactory>();
+            var api = scope.ServiceProvider.GetRequiredService<ILiveApi>();
+            var biliCookie = scope.ServiceProvider.GetRequiredService<BiliCookie>();
+
+            var request = new SendLiveDanmukuRequest(biliCookie.BiliJct, 63666, "63666");
+
+            BiliApiResponse re = api.SendLiveDanmuku(request).Result;
+
+            Assert.True(re.Code == 0);
         }
     }
 }

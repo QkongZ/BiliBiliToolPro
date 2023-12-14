@@ -20,6 +20,7 @@
       - [3.2.3. 手动运行测试](#323-手动运行测试)
       - [3.2.4. 配置触发器，设定运行时间和频率](#324-配置触发器设定运行时间和频率)
   - [4. 测试](#4-测试)
+  - [5. 关于腾讯云日志](#5-关于腾讯云日志)
 
 <!-- /TOC -->
 
@@ -68,14 +69,9 @@ Actions 使用 `Serverless Framework` 来部署，通过 `serverless.yml` 来配
 
 **Ⅰ.拷贝或下载 [serverless.yml](./serverless.yml) 文件内容到本地文件中，开始编辑内容**
 
-其中主要需要改的是最下方的环境变量，这些环境变量在部署后会添加到云函数中（即云函数控制台看到的环境变量集合），它们将作为应用配置传入bilibili_tool
+其中主要需要改的是最下方的环境变量，这些环境变量在部署后会添加到云函数中（即云函数控制台看到的环境变量集合），它们将作为应用配置传入 bilibili_tool
 
-其中 cookie 是必填项，其他应用配置的也可以通过添加相应的环境变量实现，建议自己添加UA、推送等配置。（配置信息请参考[配置说明文档](../docs/configuration.md)）
-
-<details>
-<summary>新增配置时注意 <a alt="yaml 的格式" href="https://www.runoob.com/w3cnote/yaml-intro.html">yaml 的格式</a></summary>
-
-比如你需要增加一个环境变量，可以在最下方添加内容应该是（注意缩进问题）：
+例如，你需要增加一个**环境变量**，在最下方添加内容应该是（注意缩进问题）：
 
 ```yaml
   environment:
@@ -85,8 +81,12 @@ Actions 使用 `Serverless Framework` 来部署，通过 `serverless.yml` 来配
       Ray_Security__IntervalSecondsBetweenRequestApi: 20
 ```
 
-</details>
+注意：其中 cookie 是必填项，其他应用配置的也可以通过添加相应的环境变量实现，建议自己添加UA、推送等配置。（更多配置项请参考[配置说明文档](../docs/configuration.md)，仅用于参考环境变量，请只关注表格中的`环境变量`一项，并参照上面的方式添加）
 
+> 如果你不熟悉 yml 或者部署时遇到格式问题，建议花几分钟阅读 [YAML 入门教程](https://www.runoob.com/w3cnote/yaml-intro.html)
+> 常犯错误：
+> Q：我在 Github Secrets 中添加了 `NUMBEROFCOINS`，值为 2，为啥投币数量还是 5。
+> A：所有自定义配置项（环境变量） _不能通过 Github Secrets 添加_，只能写在 `serverless.yml` 中。你应该参考上面的例子添加环境变量 `Ray_DailyTaskConfig__NumberOfCoins`。
 
 其他 `serverless.yml` 可选配置内容请参考[官方说明](https://github.com/serverless-components/tencent-scf/blob/master/docs/configure.md)
 
@@ -123,7 +123,7 @@ Actions 使用 `Serverless Framework` 来部署，通过 `serverless.yml` 来配
 ### 3.2. 方式二：上传zip包部署
 该方式比较简单直观，但是代码是上传是固定版本，想更新的话需要再次手动上传。
 #### 3.2.1. 下载压缩包到本地
-点击[BiliBiliTool/release](https://github.com/RayWangQvQ/BiliBiliTool/releases)，选择最新版本的 `tencent-scf.zip` ，下载到本地
+点击[BiliBiliToolPro/release](https://github.com/RayWangQvQ/BiliBiliToolPro/releases)，选择最新版本的 `tencent-scf.zip` ，下载到本地
 #### 3.2.2. 云函数控制台新增函数服务
 **Ⅰ.进入[云函数控制台](https://console.cloud.tencent.com/scf/)，单击左侧导航栏【函数服务】，进入“函数服务”页面。顶部地域选择一个靠近自己地址的，点击新建按钮。**
 
@@ -150,6 +150,7 @@ Actions 使用 `Serverless Framework` 来部署，通过 `serverless.yml` 来配
 * 环境变量（这里先加 2 个配置就行了，后续可以再添加其他的）：
     * cookie 配置：key 为 `Ray_BiliBiliCookies__1` ， value 为之前浏览器抓取到的cookie字符串
     * 随机睡眠配置：key 为 `Ray_Security__RandomSleepMaxMin` ，value 为 `0` （为了方便测试，所以先关掉，后面测好之后再删掉该配置，或者自己改一个value值）
+    * 指定任务：key 为 `Ray_RunTasks` ，value 为 `Test` （供首次部署时测试使用，后续将通过触发器传递功能任务）
 
 如下图：
 
@@ -206,3 +207,23 @@ Actions 使用 `Serverless Framework` 来部署，通过 `serverless.yml` 来配
 如下图:
 
 ![tencent-scf-test-2](../docs/imgs/tencent-scf-test-2.png)
+
+**Ⅲ.返回函数配置页面，将之前配置的环境变量`Ray_RunTasks`删除，后续函数将自动执行触发器中配置的功能任务**
+
+## 5. 关于腾讯云日志
+
+**Ⅰ.腾讯云关于CLS日志的免费额度说明如下：**
+
+![Tencent-log-docs-1.png](../docs/imgs/Tencent-log-docs-1.png)
+
+**Ⅱ.实测每日运行函数日志花费如图：**
+
+![Tencent-log-bill-1.png](../docs/imgs/Tencent-log-bill-1.png)
+
+**Ⅲ.如果需要完全白嫖(即不需要任何费用)的话，可以切至[腾讯云日志服务页](https://console.cloud.tencent.com/cls/overview)**
+
+**Ⅳ.点击侧边栏的日志主题，并找到云函数所在地域，如图所示：**
+
+![Tencent-logpage-1.png](../docs/imgs/Tencent-logpage-1.png)
+
+**Ⅴ.点击删除，则将删除此日志主题，云函数因为无法定位到日志集，就不会产生额外费用。**

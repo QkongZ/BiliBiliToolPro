@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging.Abstractions;
 using Ray.BiliBiliTool.Config;
-using Ray.BiliBiliTool.Config.Options;
 using Ray.BiliBiliTool.Infrastructure;
+using Ray.BiliBiliTool.Infrastructure.Cookie;
 
 namespace Ray.BiliBiliTool.Agent
 {
@@ -17,39 +13,47 @@ namespace Ray.BiliBiliTool.Agent
     {
         private readonly ILogger<BiliCookie> _logger;
 
-        public BiliCookie(ILogger<BiliCookie> logger,
-            CookieStrFactory cookieStrFactory)
-            : base(cookieStrFactory.GetCurrentCookieStr())
+        public BiliCookie(string ckStr)
+            : this(new List<string> { ckStr }) { }
+
+        public BiliCookie(List<string> ckStrList)
+            : this(NullLogger<BiliCookie>.Instance, new CookieStrFactory(ckStrList)) { }
+
+        public BiliCookie(ILogger<BiliCookie> logger, CookieStrFactory cookieStrFactory)
+            : base(cookieStrFactory)
         {
             _logger = logger;
+        }
 
-            if (CookieItemDictionary.TryGetValue(GetPropertyDescription(nameof(UserId)), out string userId))
+        public override string CkValueBuild(string value)
+        {
+            value = base.CkValueBuild(value);
+
+            if (value.Contains(','))
             {
-                UserId = userId;
-            }
-            if (CookieItemDictionary.TryGetValue(GetPropertyDescription(nameof(BiliJct)), out string jct))
-            {
-                BiliJct = jct;
-            }
-            if (CookieItemDictionary.TryGetValue(GetPropertyDescription(nameof(SessData)), out string sess))
-            {
-                SessData = sess;
+                value = Uri.EscapeDataString(value);
             }
 
-            this.Check();
+            return value;
         }
 
         [Description("DedeUserID")]
-        public string UserId { get; set; }
+        public string UserId => CookieItemDictionary.TryGetValue(GetPropertyDescription(nameof(UserId)), out string userId) ? userId : "";
 
         /// <summary>
         /// SESSDATA
         /// </summary>
         [Description("SESSDATA")]
-        public string SessData { get; set; }
+        public string SessData => CookieItemDictionary.TryGetValue(GetPropertyDescription(nameof(SessData)), out string sess) ? sess : "";
 
         [Description("bili_jct")]
-        public string BiliJct { get; set; }
+        public string BiliJct => CookieItemDictionary.TryGetValue(GetPropertyDescription(nameof(BiliJct)), out string jct) ? jct : "";
+
+        [Description("LIVE_BUVID")]
+        public string LiveBuvid => CookieItemDictionary.TryGetValue(GetPropertyDescription(nameof(LiveBuvid)), out string liveBuvid) ? liveBuvid : "";
+
+        [Description("buvid3")]
+        public string Buvid => CookieItemDictionary.TryGetValue(GetPropertyDescription(nameof(Buvid)), out string buvid) ? buvid : "";
 
         /// <summary>
         /// 检查是否已配置
@@ -92,13 +96,6 @@ namespace Ray.BiliBiliTool.Agent
 
             if (!result)
                 throw new Exception($"请正确配置Cookie后再运行，配置方式见 {Constants.SourceCodeUrl}");
-        }
-
-        public override string ToString()
-        {
-            if (CookieStr.IsNotNullOrEmpty()) return CookieStr;
-
-            return "";
         }
 
         private string GetPropertyDescription(string propertyName)

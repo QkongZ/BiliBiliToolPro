@@ -11,8 +11,10 @@ using Polly;
 using Polly.Extensions.Http;
 using Ray.BiliBiliTool.Agent.BiliBiliAgent.Interfaces;
 using Ray.BiliBiliTool.Agent.HttpClientDelegatingHandlers;
+using Ray.BiliBiliTool.Agent.QingLong;
 using Ray.BiliBiliTool.Config.Options;
 using Ray.BiliBiliTool.Infrastructure;
+using Ray.BiliBiliTool.Infrastructure.Cookie;
 
 namespace Ray.BiliBiliTool.Agent.Extensions
 {
@@ -36,7 +38,7 @@ namespace Ray.BiliBiliTool.Agent.Extensions
                 if (!string.IsNullOrWhiteSpace(old)) list.Add(old);
 
                 var configList = config.GetSection("BiliBiliCookies")
-                    .Get<List<string>>()
+                    .Get<List<string>>() ?? new List<string>()
                     .Where(x => !string.IsNullOrWhiteSpace(x))
                     .ToList();
                 list.AddRange(configList);
@@ -66,6 +68,28 @@ namespace Ray.BiliBiliTool.Agent.Extensions
             services.AddBiliBiliClientApi<IChargeApi>("https://api.bilibili.com");
             services.AddBiliBiliClientApi<IVideoApi>("https://api.bilibili.com");
             services.AddBiliBiliClientApi<IVideoWithoutCookieApi>("https://api.bilibili.com", false);
+            services.AddBiliBiliClientApi<IVipBigPointApi>("https://api.bilibili.com");
+            services.AddBiliBiliClientApi<IPassportApi>("http://passport.bilibili.com", false);
+            services.AddBiliBiliClientApi<ILiveTraceApi>("https://live-trace.bilibili.com");
+            services.AddBiliBiliClientApi<IHomeApi>("https://www.bilibili.com", false);
+
+            // 添加注入
+            services.AddBiliBiliClientApi<IArticleApi>("https://api.bilibili.com");
+
+            //qinglong
+            var qinglongHost = configuration["QL_URL"] ?? "http://localhost:5600";
+            services
+                .AddHttpApi<IQingLongApi>(o =>
+                {
+                    o.HttpHost = new Uri(qinglongHost);
+                    o.UseDefaultUserAgent = false;
+                })
+                .ConfigureHttpClient((sp, c) =>
+                {
+                    c.DefaultRequestHeaders.Add("User-Agent",
+                        sp.GetRequiredService<IOptionsMonitor<SecurityOptions>>().CurrentValue.UserAgent);
+                })
+                .AddPolicyHandler(GetRetryPolicy());
 
             return services;
         }
@@ -99,7 +123,7 @@ namespace Ray.BiliBiliTool.Agent.Extensions
                 httpClientBuilder.ConfigureHttpClient((sp, c) =>
                 {
                     var ck = sp.GetRequiredService<BiliCookie>();
-                    c.DefaultRequestHeaders.Add("Cookie", ck.CookieStr);
+                    c.DefaultRequestHeaders.Add("Cookie", ck.ToString());
                 });
 
             return services;

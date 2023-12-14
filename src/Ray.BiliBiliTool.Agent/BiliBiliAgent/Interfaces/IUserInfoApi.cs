@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Ray.BiliBiliTool.Agent.Attributes;
 using Ray.BiliBiliTool.Agent.BiliBiliAgent.Dtos;
 using WebApiClientCore.Attributes;
 
@@ -19,5 +20,13 @@ namespace Ray.BiliBiliTool.Agent.BiliBiliAgent.Interfaces
         /// <returns></returns>
         [HttpGet("/x/web-interface/nav")]
         Task<BiliApiResponse<UserInfo>> LoginByCookie();
+
+        /// <summary>
+        /// 获取用户空间信息
+        /// </summary>
+        /// <param name="userId">uid</param>
+        /// <returns></returns>
+        [HttpGet("/x/space/wbi/acc/info")]
+        Task<BiliApiResponse<GetSpaceInfoResponse>> GetSpaceInfo([PathQuery] GetSpaceInfoFullDto request);
     }
 }

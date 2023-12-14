@@ -38,6 +38,12 @@ inputs:
           cronExpression: "0 0 0 * * MON *"
           enable: true
           argument: UnfollowBatched
+    - timer: # 大会员积分
+        parameters:
+          name: VipBigPointTask
+          cronExpression: "0 07 01 * * * *"
+          enable: true
+          argument: VipBigPoint
   environment:
     variables: # 根据自己的需要修改
       Ray_BiliBiliCookies__1: buvid3=3E1073E3-4112-C867-5E92-BECF4056114C12906infoc; i-wanna-go-back=-1; _uuid=CC559B3C-9F610-6CF10-134E-C9DD57C6EB10404336infoc; buvid4=7773621B-E565-BC8C-403A-C9BC60DFB96814476-022030800-jL4bkXnPi13LMO71q17sIQ%3D%3D; fingerprint=3f1eb7c98c28f07724d38bb8d2bce74c; sid=k1nhj1ce; buvid_fp_plain=undefined; DedeUserID=13701499; DedeUserID__ckMd5=227804225d1d3c79; SESSDATA=f0bfbe41%2C1662222253%2Cccbef*31; bili_jct=8c952ab8ed3ef7b9d0a95da0006c12af; buvid_fp=3f1eb7c98c28f07724d38bb8d2bce74c; rpdid=|(JmkRmYkJl0J'uYRYY~|kmR; b_ut=5; CURRENT_BLACKGAP=0; LIVE_BUVID=AUTO9516477978119407; blackside_state=1; bp_video_offset_13701499=645317174137716700; CURRENT_QUALITY=112; PVID=1; b_lsid=6E1AFEC7_1800F225A09; CURRENT_FNVAL=80; innersign=0
